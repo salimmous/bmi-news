@@ -61,10 +61,12 @@ function App() {
 
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
+
+              {/* Tempo routes */}
+              {import.meta.env.VITE_TEMPO === "true" && (
+                <Route path="/tempobook/*" element={<div />} />
+              )}
             </Route>
-            {import.meta.env.VITE_TEMPO === "true" && (
-              <Route path="/tempobook/*" element={<div />} />
-            )}
           </Routes>
         </>
       </Suspense>
