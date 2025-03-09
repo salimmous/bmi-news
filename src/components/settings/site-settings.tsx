@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import React from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -19,13 +20,20 @@ import {
   Globe,
   Palette,
   Layout,
+  AlertTriangle,
+  Navigation,
 } from "lucide-react";
+import { getSettings, updateSettings, uploadFile } from "../../lib/api";
+import { toast } from "../ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 interface SiteSettings {
   siteName: string;
   siteDescription: string;
   contactEmail: string;
   footerText: string;
+  logoPath?: string;
+  faviconPath?: string;
   socialLinks: {
     facebook: string;
     twitter: string;
@@ -48,7 +56,14 @@ interface SiteSettings {
 
 export default function SiteSettingsPanel() {
   const [activeTab, setActiveTab] = useState("general");
+  // Import the NavigationSettings component
+  const NavigationSettings = React.lazy(() => import('./navigation-settings').then(module => ({ 
+    default: module.default as React.ComponentType<{}>
+  })));
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [useMockData, setUseMockData] = useState(true); // Default to using mock data
   const [settings, setSettings] = useState<SiteSettings>({
     siteName: "BMI Tracker",
     siteDescription: "Track your Body Mass Index and improve your health",
@@ -74,53 +89,152 @@ export default function SiteSettingsPanel() {
     },
   });
 
-  // Load settings from localStorage for demo purposes
-  // In a real app, this would come from your backend API
+  // Load settings from localStorage or use default values
   useEffect(() => {
-    const savedSettings = localStorage.getItem("siteSettings");
-    if (savedSettings) {
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        setSettings(JSON.parse(savedSettings));
+        // Try to load settings from localStorage
+        const savedSettings = localStorage.getItem("siteSettings");
+        if (savedSettings) {
+          try {
+            const parsedSettings = JSON.parse(savedSettings);
+            setSettings(parsedSettings);
+            console.log("Loaded site settings from localStorage");
+          } catch (parseError) {
+            console.error("Error parsing saved settings:", parseError);
+            // Keep default settings if parsing fails
+          }
+        } else {
+          console.log("No saved settings found, using defaults");
+          // Using default settings (already set in state)
+        }
       } catch (error) {
-        console.error("Error parsing saved site settings:", error);
+        console.error("Error loading site settings:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    fetchSettings();
   }, []);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      // In a real app, this would be an API call to save the settings
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Save settings to localStorage
       localStorage.setItem("siteSettings", JSON.stringify(settings));
-      alert("Site settings saved successfully");
+      
+      // Simulate a brief delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      toast({
+        title: "Success",
+        description: "Site settings saved successfully",
+        variant: "default",
+      });
     } catch (error) {
       console.error("Error saving site settings:", error);
-      alert("Failed to save site settings");
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save site settings",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // In a real app, this would upload the file to your server or cloud storage
-    // For demo purposes, we'll just show an alert
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      alert(
-        `File "${e.target.files[0].name}" would be uploaded in a real implementation`,
-      );
+      try {
+        const file = e.target.files[0];
+        // Create a local URL for the uploaded file
+        const logoUrl = URL.createObjectURL(file);
+        
+        // Update settings with the new logo path
+        setSettings({
+          ...settings,
+          logoPath: logoUrl,
+        });
+        
+        // Save updated settings to localStorage
+        localStorage.setItem("siteSettings", JSON.stringify({
+          ...settings,
+          logoPath: logoUrl,
+        }));
+        
+        toast({
+          title: "Success",
+          description: "Logo uploaded successfully",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error("Error handling logo upload:", error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to upload logo",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // In a real app, this would upload the file to your server or cloud storage
-    // For demo purposes, we'll just show an alert
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      alert(
-        `File "${e.target.files[0].name}" would be uploaded in a real implementation`,
-      );
+      try {
+        const file = e.target.files[0];
+        // Create a local URL for the uploaded file
+        const faviconUrl = URL.createObjectURL(file);
+        
+        // Update settings with the new favicon path
+        setSettings({
+          ...settings,
+          faviconPath: faviconUrl,
+        });
+        
+        // Save updated settings to localStorage
+        localStorage.setItem("siteSettings", JSON.stringify({
+          ...settings,
+          faviconPath: faviconUrl,
+        }));
+        
+        toast({
+          title: "Success",
+          description: "Favicon uploaded successfully",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error("Error handling favicon upload:", error);
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to upload favicon",
+          variant: "destructive",
+        });
+      }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading settings...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -142,7 +256,7 @@ export default function SiteSettingsPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general" className="flex items-center">
             <Globe className="mr-2 h-4 w-4" />
             General
@@ -154,6 +268,10 @@ export default function SiteSettingsPanel() {
           <TabsTrigger value="layout" className="flex items-center">
             <Layout className="mr-2 h-4 w-4" />
             Layout
+          </TabsTrigger>
+          <TabsTrigger value="navigation" className="flex items-center">
+            <Navigation className="mr-2 h-4 w-4" />
+            Navigation
           </TabsTrigger>
         </TabsList>
 
@@ -592,6 +710,17 @@ export default function SiteSettingsPanel() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="navigation" className="space-y-4 mt-4">
+          <Suspense fallback={
+            <div className="flex justify-center items-center h-64">
+              <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Loading navigation settings...</span>
+            </div>
+          }>
+            <NavigationSettings />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

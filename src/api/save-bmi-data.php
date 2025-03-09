@@ -1,28 +1,13 @@
 <?php
-// Database connection parameters
-$host = 'localhost'; // Your database host
-$dbname = 'bmi_tracker'; // Your database name
-$username = 'your_db_username'; // Your database username
-$password = 'your_db_password'; // Your database password
+// Include database connection file
+require_once 'db-connect.php';
 
-// Set headers to allow cross-origin requests and specify content type
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+// Set common API response headers
+setApiHeaders();
 
 // Check if the request is a POST request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(["message" => "Method not allowed. Please use POST."]);
-    exit;
+    sendJsonResponse(["success" => false, "message" => "Method not allowed. Please use POST."], 405);
 }
 
 // Get the posted data
@@ -30,9 +15,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 // Check if data is valid
 if (!$data || !isset($data['userData']) || !isset($data['metrics'])) {
-    http_response_code(400); // Bad Request
-    echo json_encode(["message" => "Invalid data format. Please provide userData and metrics."]);
-    exit;
+    sendJsonResponse(["success" => false, "message" => "Invalid data format. Please provide userData and metrics."], 400);
 }
 
 // Extract user data and metrics
@@ -41,15 +24,12 @@ $metrics = $data['metrics'];
 
 // Validate required fields
 if (empty($userData['email'])) {
-    http_response_code(400);
-    echo json_encode(["message" => "Email is required."]);
-    exit;
+    sendJsonResponse(["success" => false, "message" => "Email is required."], 400);
 }
 
 try {
-    // Create a new PDO instance
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Get database connection
+    $pdo = getDbConnection();
     
     // Begin transaction
     $pdo->beginTransaction();
@@ -176,22 +156,20 @@ try {
     $pdo->commit();
     
     // Return success response
-    http_response_code(201); // Created
-    echo json_encode([
+    sendJsonResponse([
+        "success" => true,
         "message" => "Data saved successfully",
         "userId" => $userId,
         "recordId" => $pdo->lastInsertId()
-    ]);
+    ], 201);
     
 } catch (PDOException $e) {
     // Rollback transaction on error
-    if ($pdo->inTransaction()) {
+    if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
     
-    http_response_code(500); // Internal Server Error
-    echo json_encode(["message" => "Database error: " . $e->getMessage()]);
+    sendJsonResponse(["success" => false, "message" => "Database error: " . $e->getMessage()], 500);
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(["message" => "Server error: " . $e->getMessage()]);
+    sendJsonResponse(["success" => false, "message" => "Server error: " . $e->getMessage()], 500);
 }

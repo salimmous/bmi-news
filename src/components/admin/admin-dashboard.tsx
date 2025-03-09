@@ -11,8 +11,9 @@ import { UserManagement } from "./user-management";
 import { HealthRecommendations } from "./health-recommendations";
 import { SystemAnalytics } from "./system-analytics";
 import { useNavigate } from "react-router-dom";
-import { Users, FileBarChart, Activity, Bell } from "lucide-react";
+import { Users, FileBarChart, Activity, Bell, Settings } from "lucide-react";
 import { Button } from "../ui/button";
+import SiteSettingsPanel from "../settings/site-settings";
 
 export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full md:w-[600px] grid-cols-3 mb-8">
+          <TabsList className="grid w-full md:w-[600px] grid-cols-4 mb-8">
             <TabsTrigger value="analytics" className="flex items-center">
               <FileBarChart className="h-4 w-4 mr-2 hidden md:block" />
               System Analytics
@@ -164,6 +165,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="recommendations" className="flex items-center">
               <Activity className="h-4 w-4 mr-2 hidden md:block" />
               Health Recommendations
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center">
+              <Settings className="h-4 w-4 mr-2 hidden md:block" />
+              Site Settings
             </TabsTrigger>
           </TabsList>
 
@@ -177,6 +182,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="recommendations" className="space-y-4">
             <HealthRecommendations />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <SiteSettingsPanel />
           </TabsContent>
         </Tabs>
       </div>

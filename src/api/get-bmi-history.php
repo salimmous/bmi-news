@@ -1,28 +1,13 @@
 <?php
-// Database connection parameters
-$host = 'localhost'; // Your database host
-$dbname = 'bmi_tracker'; // Your database name
-$username = 'your_db_username'; // Your database username
-$password = 'your_db_password'; // Your database password
+// Include database connection file
+require_once 'db-connect.php';
 
-// Set headers to allow cross-origin requests and specify content type
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+// Set common API response headers
+setApiHeaders();
 
 // Check if the request is a GET request
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(["message" => "Method not allowed. Please use GET."]);
-    exit;
+    sendJsonResponse(["success" => false, "message" => "Method not allowed. Please use GET."], 405);
 }
 
 // Get the email parameter
@@ -30,15 +15,12 @@ $email = isset($_GET['email']) ? $_GET['email'] : null;
 
 // Validate email
 if (!$email) {
-    http_response_code(400); // Bad Request
-    echo json_encode(["message" => "Email parameter is required."]);
-    exit;
+    sendJsonResponse(["success" => false, "message" => "Email parameter is required."], 400);
 }
 
 try {
-    // Create a new PDO instance
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Get database connection
+    $pdo = getDbConnection();
     
     // Get user ID from email
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -46,9 +28,7 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
-        http_response_code(404); // Not Found
-        echo json_encode(["message" => "User not found."]);
-        exit;
+        sendJsonResponse(["success" => false, "message" => "User not found."], 404);
     }
     
     $userId = $user['id'];
@@ -99,7 +79,7 @@ try {
                 'fat' => (int) $record['macrosFat']
             ],
             'waterIntake' => (int) $record['waterIntake'],
-            'vo2Max' => $record['vo2Max'] ? (int) $record['vo2Max'] : null,
+            'vo2Max' => (int) $record['vo2Max'],
             'date' => $record['date'],
             'createdAt' => $record['createdAt']
         ];
@@ -107,39 +87,14 @@ try {
         $formattedRecords[] = $formattedRecord;
     }
     
-    // Get user details
-    $stmt = $pdo->prepare("SELECT 
-        name,
-        email,
-        phone,
-        age,
-        gender,
-        fitness_goal as fitnessGoal,
-        calories_per_day as caloriesPerDay,
-        diet_preference as dietPreference,
-        activity_level as activityLevel,
-        gym_sessions_per_week as gymSessionsPerWeek,
-        time_in_gym as timeInGym,
-        hours_of_sleep as hoursOfSleep,
-        created_at as createdAt,
-        updated_at as updatedAt
-        FROM users 
-        WHERE id = ?");
-    $stmt->execute([$userId]);
-    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Return success response with records and user data
-    http_response_code(200);
-    echo json_encode([
-        "message" => "Data retrieved successfully",
-        "userData" => $userData,
-        "records" => $formattedRecords
+    // Return success response with records
+    sendJsonResponse([
+        "success" => true,
+        "data" => $formattedRecords
     ]);
     
 } catch (PDOException $e) {
-    http_response_code(500); // Internal Server Error
-    echo json_encode(["message" => "Database error: " . $e->getMessage()]);
+    sendJsonResponse(["success" => false, "message" => "Database error: " . $e->getMessage()], 500);
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(["message" => "Server error: " . $e->getMessage()]);
+    sendJsonResponse(["success" => false, "message" => "Server error: " . $e->getMessage()], 500);
 }

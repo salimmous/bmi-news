@@ -11,8 +11,9 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Alert, AlertDescription } from "../ui/alert";
-import { Mail, Server, Send, Save, RefreshCw } from "lucide-react";
+import { Mail, Server, Send, Save, RefreshCw, ListFilter } from "lucide-react";
 import { EmailTemplates } from "./email-templates";
+import EmailLogs from "./email-logs";
 
 interface SMTPConfig {
   host: string;
@@ -108,7 +109,7 @@ export default function SMTPManagement() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="settings" className="flex items-center">
             <Server className="mr-2 h-4 w-4" />
             SMTP Settings
@@ -116,6 +117,10 @@ export default function SMTPManagement() {
           <TabsTrigger value="templates" className="flex items-center">
             <Mail className="mr-2 h-4 w-4" />
             Email Templates
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="flex items-center">
+            <ListFilter className="mr-2 h-4 w-4" />
+            Email Logs
           </TabsTrigger>
         </TabsList>
 
@@ -312,6 +317,10 @@ export default function SMTPManagement() {
 
         <TabsContent value="templates" className="space-y-4 mt-4">
           <EmailTemplates />
+        </TabsContent>
+
+        <TabsContent value="logs" className="space-y-4 mt-4">
+          <EmailLogs />
         </TabsContent>
       </Tabs>
     </div>

@@ -44,6 +44,7 @@ import {
   Trash2,
   Edit,
   RefreshCw,
+  Clipboard,
 } from "lucide-react";
 
 interface MealPlan {
