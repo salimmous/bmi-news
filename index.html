@@ -1,10 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <link rel="stylesheet" href="/fonts.css" />
+    <title>BMI Tracker</title>
+    <script>
+      // Set language from localStorage on page load
+      const savedLang = localStorage.getItem("language");
+      if (savedLang) {
+        document.documentElement.lang = savedLang;
+        document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
+        if (savedLang === "ar") {
+          document.documentElement.classList.add("lang-ar");
+        }
+      } else {
+        document.documentElement.lang = "en";
+        document.documentElement.dir = "ltr";
+      }
+    </script>
+    <!-- Preload Arabic font for faster rendering -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>

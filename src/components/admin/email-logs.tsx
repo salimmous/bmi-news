@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { Button } from "../ui/button";
 import {
   Table,
   TableBody,
@@ -14,304 +15,270 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
-import { Search, RefreshCw, Download, Trash2, Filter } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "../ui/pagination";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { Mail, Search, RefreshCw, Eye, Download, Trash2 } from "lucide-react";
+import { format } from "date-fns";
 
 interface EmailLog {
-  id: string;
+  id: number;
   recipient: string;
   subject: string;
-  templateName: string;
+  template_name: string;
   status: "sent" | "failed" | "pending";
-  sentAt: string;
+  sent_at: string;
   error?: string;
 }
 
 export default function EmailLogs() {
   const [logs, setLogs] = useState<EmailLog[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [dateFilter, setDateFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const logsPerPage = 10;
+  const [viewingLog, setViewingLog] = useState<EmailLog | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<{
+    from: string;
+    to: string;
+  }>({
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0], // 30 days ago
+    to: new Date().toISOString().split("T")[0], // today
+  });
 
-  // Load email logs from localStorage for demo purposes
-  // In a real app, this would come from your backend API
+  // Mock data for demonstration
+  const mockLogs: EmailLog[] = [
+    {
+      id: 1,
+      recipient: "john.doe@example.com",
+      subject: "Welcome to BMI Tracker!",
+      template_name: "Welcome Email",
+      status: "sent",
+      sent_at: "2023-10-15T14:30:00Z",
+    },
+    {
+      id: 2,
+      recipient: "jane.smith@example.com",
+      subject: "Your Weekly BMI Progress Report",
+      template_name: "Weekly Progress Report",
+      status: "sent",
+      sent_at: "2023-10-14T10:15:00Z",
+    },
+    {
+      id: 3,
+      recipient: "mike.johnson@example.com",
+      subject: "Your Personalized Meal Plan is Ready",
+      template_name: "New Meal Plan Recommendation",
+      status: "failed",
+      sent_at: "2023-10-13T09:45:00Z",
+      error: "SMTP connection timeout",
+    },
+    {
+      id: 4,
+      recipient: "sarah.williams@example.com",
+      subject: "Your Sport-Specific BMI Analysis",
+      template_name: "Sport-Specific BMI Analysis",
+      status: "sent",
+      sent_at: "2023-10-12T16:20:00Z",
+    },
+    {
+      id: 5,
+      recipient: "robert.brown@example.com",
+      subject: "Congratulations! You've Reached Your Goal",
+      template_name: "Goal Achievement Notification",
+      status: "pending",
+      sent_at: "2023-10-11T11:30:00Z",
+    },
+    {
+      id: 6,
+      recipient: "emily.davis@example.com",
+      subject: "We Miss You! Continue Your Health Journey",
+      template_name: "Inactivity Reminder",
+      status: "sent",
+      sent_at: "2023-10-10T08:45:00Z",
+    },
+    {
+      id: 7,
+      recipient: "david.miller@example.com",
+      subject: "Your Monthly Health & Fitness Summary",
+      template_name: "Monthly Health Summary",
+      status: "failed",
+      sent_at: "2023-10-09T14:10:00Z",
+      error: "Invalid recipient email address",
+    },
+    {
+      id: 8,
+      recipient: "jennifer.wilson@example.com",
+      subject: "Exciting New Features for BMI Tracker",
+      template_name: "New Feature Announcement",
+      status: "sent",
+      sent_at: "2023-10-08T09:30:00Z",
+    },
+  ];
+
+  // Load logs on component mount
   useEffect(() => {
-    const loadLogs = () => {
-      setIsLoading(true);
-      try {
-        const savedLogs = localStorage.getItem("emailLogs");
-        if (savedLogs) {
-          setLogs(JSON.parse(savedLogs));
-        } else {
-          // Generate demo data if no logs exist
-          generateDemoLogs();
-        }
-      } catch (error) {
-        console.error("Error loading email logs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadLogs();
+    fetchLogs();
   }, []);
 
-  const generateDemoLogs = () => {
-    const demoLogs: EmailLog[] = [];
-    const templates = ["Welcome Email", "Weekly Progress Report", "New Meal Plan Recommendation"];
-    const subjects = [
-      "Welcome to BMI Tracker!",
-      "Your Weekly BMI Progress Report",
-      "Your Personalized Meal Plan is Ready",
-    ];
-    const statuses: ("sent" | "failed" | "pending")[] = ["sent", "failed", "pending"];
-    const recipients = [
-      "john.doe@example.com",
-      "jane.smith@example.com",
-      "robert.johnson@example.com",
-      "emily.wilson@example.com",
-      "michael.brown@example.com",
-    ];
-
-    // Generate 50 random logs for demo purposes
-    for (let i = 0; i < 50; i++) {
-      const templateIndex = Math.floor(Math.random() * templates.length);
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const recipient = recipients[Math.floor(Math.random() * recipients.length)];
-      
-      // Generate a random date within the last 30 days
-      const date = new Date();
-      date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-      
-      demoLogs.push({
-        id: `log-${i + 1}`,
-        recipient,
-        subject: subjects[templateIndex],
-        templateName: templates[templateIndex],
-        status,
-        sentAt: date.toISOString(),
-        error: status === "failed" ? "SMTP connection error" : undefined,
-      });
-    }
-
-    // Sort by date, newest first
-    demoLogs.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
-    
-    setLogs(demoLogs);
-    localStorage.setItem("emailLogs", JSON.stringify(demoLogs));
-  };
-
-  const handleRefresh = () => {
+  const fetchLogs = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      generateDemoLogs();
+    try {
+      // In a real app, this would be an API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setLogs(mockLogs);
+    } catch (error) {
+      console.error("Error fetching email logs:", error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleClearLogs = () => {
-    if (window.confirm("Are you sure you want to clear all email logs? This action cannot be undone.")) {
-      setLogs([]);
-      localStorage.removeItem("emailLogs");
-    }
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would filter from the server
+    // For demo, we'll just filter the mock data
+    console.log("Searching for:", searchTerm);
+  };
+
+  const handleViewLog = (log: EmailLog) => {
+    setViewingLog(log);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleDeleteLog = (id: number) => {
+    // In a real app, this would be an API call
+    setLogs(logs.filter((log) => log.id !== id));
   };
 
   const handleExportLogs = () => {
-    const csvContent = [
-      ["ID", "Recipient", "Subject", "Template", "Status", "Sent At", "Error"].join(","),
-      ...filteredLogs.map(log => [
-        log.id,
-        log.recipient,
-        `"${log.subject.replace(/"/g, '""')}"`,
-        log.templateName,
-        log.status,
-        new Date(log.sentAt).toLocaleString(),
-        log.error ? `"${log.error.replace(/"/g, '""')}"` : ""
-      ].join(","))
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `email-logs-${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // In a real app, this would generate a CSV file
+    alert("Logs would be exported as CSV");
   };
 
-  // Filter logs based on search term and filters
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = 
+  const filteredLogs = logs.filter(
+    (log) =>
       log.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.templateName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || log.status === statusFilter;
-    
-    let matchesDate = true;
-    if (dateFilter !== "all") {
-      const logDate = new Date(log.sentAt);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      if (dateFilter === "today") {
-        matchesDate = logDate.toDateString() === today.toDateString();
-      } else if (dateFilter === "yesterday") {
-        matchesDate = logDate.toDateString() === yesterday.toDateString();
-      } else if (dateFilter === "last7days") {
-        const last7Days = new Date(today);
-        last7Days.setDate(last7Days.getDate() - 7);
-        matchesDate = logDate >= last7Days;
-      } else if (dateFilter === "last30days") {
-        const last30Days = new Date(today);
-        last30Days.setDate(last30Days.getDate() - 30);
-        matchesDate = logDate >= last30Days;
-      }
-    }
-    
-    return matchesSearch && matchesStatus && matchesDate;
-  });
-
-  // Pagination
-  const indexOfLastLog = currentPage * logsPerPage;
-  const indexOfFirstLog = indexOfLastLog - logsPerPage;
-  const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
-  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
+      log.template_name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   const getStatusBadge = (status: "sent" | "failed" | "pending") => {
     switch (status) {
       case "sent":
-        return <Badge className="bg-green-500">Sent</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
+            Sent
+          </Badge>
+        );
       case "failed":
-        return <Badge variant="destructive">Failed</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200"
+          >
+            Failed
+          </Badge>
+        );
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-50 text-yellow-700 border-yellow-200"
+          >
+            Pending
+          </Badge>
+        );
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Email Logs</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-            {isLoading ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            <span className="ml-2 hidden sm:inline">Refresh</span>
-          </Button>
-          <Button variant="outline" onClick={handleExportLogs}>
-            <Download className="h-4 w-4" />
-            <span className="ml-2 hidden sm:inline">Export</span>
-          </Button>
-          <Button variant="outline" onClick={handleClearLogs} className="text-red-500 hover:text-red-700">
-            <Trash2 className="h-4 w-4" />
-            <span className="ml-2 hidden sm:inline">Clear</span>
-          </Button>
-        </div>
-      </div>
-
-      <Card className="relative">
+    <div className="space-y-4">
+      <Card>
         <CardHeader>
-          <CardTitle>Email Delivery Logs</CardTitle>
+          <CardTitle className="flex items-center">
+            <Mail className="h-5 w-5 mr-2 text-primary" />
+            Email Logs
+          </CardTitle>
           <CardDescription>
-            Track all emails sent to users through the system
+            View and manage email sending history and delivery status
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by recipient, subject or template..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        <CardContent>
+          <div className="flex flex-col md:flex-row justify-between mb-6 space-y-4 md:space-y-0">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <div className="space-y-1">
+                <Label htmlFor="from-date">From</Label>
+                <Input
+                  id="from-date"
+                  type="date"
+                  value={dateRange.from}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, from: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="to-date">To</Label>
+                <Input
+                  id="to-date"
+                  type="date"
+                  value={dateRange.to}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, to: e.target.value })
+                  }
+                />
+              </div>
             </div>
-            <div className="flex gap-2">
-              <div className="w-40">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="sent">Sent</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-40">
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="yesterday">Yesterday</SelectItem>
-                    <SelectItem value="last7days">Last 7 Days</SelectItem>
-                    <SelectItem value="last30days">Last 30 Days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
+            <div className="flex space-x-2">
+              <form onSubmit={handleSearch} className="flex space-x-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search emails..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Button type="submit">Search</Button>
+              </form>
+              <Button variant="outline" onClick={fetchLogs}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={handleExportLogs}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center items-center py-8">
+            <div className="flex justify-center items-center h-64">
               <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Loading logs...</span>
             </div>
           ) : filteredLogs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No email logs found. {logs.length > 0 ? "Try adjusting your filters." : ""}
+              No email logs found for the selected criteria.
             </div>
           ) : (
-            <div className="border rounded-md">
-              <Table className="w-full">
+            <div className="rounded-md border">
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Recipient</TableHead>
@@ -323,29 +290,111 @@ export default function EmailLogs() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentLogs.map((log) => (
+                  {filteredLogs.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell>{log.recipient}</TableCell>
-                      <TableCell>{log.subject}</TableCell>
-                      <TableCell>{log.templateName}</TableCell>
+                      <TableCell className="font-medium">
+                        {log.recipient}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {log.subject}
+                      </TableCell>
+                      <TableCell>{log.template_name}</TableCell>
                       <TableCell>{getStatusBadge(log.status)}</TableCell>
-                      <TableCell>{formatDate(log.sentAt)}</TableCell>
+                      <TableCell>
+                        {format(new Date(log.sent_at), "MMM d, yyyy HH:mm")}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Filter className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => setSearchTerm(log.recipient)}
-                            >
-                              Filter by this recipient
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setStatusFilter(log.status)}
-                            >
-                              Filter by this status
-                            </DropdownMenuItem>
-                            {log.status === "failed" && log.error ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewLog(log)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteLog(log.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* View Log Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Email Log Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about the email
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingLog && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Recipient</Label>
+                  <p className="font-medium">{viewingLog.recipient}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <p>{getStatusBadge(viewingLog.status)}</p>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground">Subject</Label>
+                <p className="font-medium">{viewingLog.subject}</p>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground">Template</Label>
+                <p>{viewingLog.template_name}</p>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground">Sent At</Label>
+                <p>{format(new Date(viewingLog.sent_at), "PPpp")}</p>
+              </div>
+
+              {viewingLog.error && (
+                <div>
+                  <Label className="text-muted-foreground">Error</Label>
+                  <p className="text-red-600">{viewingLog.error}</p>
+                </div>
+              )}
+
+              <div className="border-t pt-4">
+                <Label className="text-muted-foreground">Email Preview</Label>
+                <div className="mt-2 p-4 border rounded-md bg-muted/20">
+                  <p className="italic text-muted-foreground">
+                    Email content preview would be displayed here in a real
+                    application.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

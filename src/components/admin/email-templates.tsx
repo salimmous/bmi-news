@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { defaultEmailTemplates } from "./email-templates-data";
 import {
   Card,
   CardContent,
@@ -47,74 +48,9 @@ interface EmailTemplate {
 }
 
 export function EmailTemplates() {
-  const [templates, setTemplates] = useState<EmailTemplate[]>([
-    {
-      id: "1",
-      name: "Welcome Email",
-      subject: "Welcome to BMI Tracker!",
-      type: "onboarding",
-      content: `<h1>Welcome to BMI Tracker!</h1>
-<p>Dear {{user.name}},</p>
-<p>Thank you for joining BMI Tracker. We're excited to help you on your health journey!</p>
-<p>With our platform, you can:</p>
-<ul>
-  <li>Track your BMI and weight over time</li>
-  <li>Get personalized health recommendations</li>
-  <li>Access professional meal and workout plans</li>
-</ul>
-<p>Get started by logging in and calculating your first BMI measurement.</p>
-<p>Best regards,<br>The BMI Tracker Team</p>`,
-      createdAt: "2023-06-01",
-      updatedAt: "2023-06-01",
-    },
-    {
-      id: "2",
-      name: "Weekly Progress Report",
-      subject: "Your Weekly BMI Progress Report",
-      type: "report",
-      content: `<h1>Your Weekly Progress Report</h1>
-<p>Dear {{user.name}},</p>
-<p>Here's a summary of your progress this week:</p>
-<ul>
-  <li>Current BMI: {{user.currentBMI}}</li>
-  <li>BMI Change: {{user.bmiChange}}</li>
-  <li>Current Weight: {{user.currentWeight}} kg</li>
-  <li>Weight Change: {{user.weightChange}} kg</li>
-</ul>
-<p>{{#if user.isImproving}}
-  Great job! You're making progress toward your goal.
-{{else}}
-  Keep going! Consistency is key to reaching your health goals.
-{{/if}}</p>
-<p>Log in to view your detailed progress charts and updated recommendations.</p>
-<p>Best regards,<br>The BMI Tracker Team</p>`,
-      createdAt: "2023-06-15",
-      updatedAt: "2023-07-01",
-    },
-    {
-      id: "3",
-      name: "New Meal Plan Recommendation",
-      subject: "Your Personalized Meal Plan is Ready",
-      type: "recommendation",
-      content: `<h1>Your Personalized Meal Plan</h1>
-<p>Dear {{user.name}},</p>
-<p>Based on your recent BMI measurements and goals, we've created a personalized meal plan for you.</p>
-<h2>Your {{mealPlan.name}}</h2>
-<p><strong>Daily Calorie Target:</strong> {{mealPlan.calories}} kcal</p>
-<h3>Breakfast</h3>
-<p>{{mealPlan.breakfast}}</p>
-<h3>Lunch</h3>
-<p>{{mealPlan.lunch}}</p>
-<h3>Dinner</h3>
-<p>{{mealPlan.dinner}}</p>
-<h3>Snacks</h3>
-<p>{{mealPlan.snacks}}</p>
-<p>Log in to view your complete meal plan with nutritional information.</p>
-<p>Best regards,<br>The BMI Tracker Team</p>`,
-      createdAt: "2023-07-10",
-      updatedAt: "2023-07-10",
-    },
-  ]);
+  const [templates, setTemplates] = useState<EmailTemplate[]>(
+    defaultEmailTemplates,
+  );
 
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);

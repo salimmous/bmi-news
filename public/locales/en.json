@@ -1,0 +1,171 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "share": "Share",
+    "view": "View",
+    "download": "Download",
+    "export": "Export",
+    "import": "Import",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success!",
+    "confirm": "Confirm",
+    "apply": "Apply",
+    "reset": "Reset",
+    "back": "Back",
+    "all": "All Categories",
+    "saved": "Saved"
+  },
+  "header": {
+    "home": "Home",
+    "about": "About",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "darkMode": "Dark Mode",
+    "language": "Language",
+    "admin": "Admin Panel",
+    "userManagement": "User Management",
+    "contentManagement": "Content Management"
+  },
+  "recommendations": {
+    "title": "Health & Performance Recommendations",
+    "subtitle": "Personalized recommendations based on your body composition, sport preferences, and fitness goals",
+    "professionalAssessment": "Professional Assessment",
+    "basedOnMetrics": "Based on your metrics",
+    "performancePotential": "Performance Potential",
+    "tabs": {
+      "nutrition": "Nutrition",
+      "training": "Training",
+      "recovery": "Recovery",
+      "mental": "Mental"
+    },
+    "viewAll": {
+      "nutrition": "View All Nutrition Recommendations",
+      "training": "View All Training Recommendations",
+      "recovery": "View All Recovery Recommendations",
+      "mental": "View All Mental Recommendations"
+    },
+    "saved": {
+      "title": "Saved Recommendations",
+      "exportAll": "Export All",
+      "empty": "You haven't saved any recommendations yet. Click the \"Save\" button on recommendations you want to reference later."
+    },
+    "help": {
+      "title": "How to Use These Recommendations",
+      "description": "These personalized recommendations are based on your current metrics and sport focus. Save your favorites, implement them consistently, and track your progress over time for best results.",
+      "viewTutorial": "View Tutorial",
+      "contactCoach": "Contact a Coach"
+    },
+    "allRecommendations": {
+      "description": "Browse all recommendations tailored to your profile and preferences."
+    },
+    "noResults": "No recommendations found matching your criteria.",
+    "assessment": {
+      "title": "Professional Assessment",
+      "badge": "Personalized Analysis",
+      "bodyComposition": "Body Composition",
+      "performanceMetrics": "Performance Metrics",
+      "strengthPotential": "Strength Potential",
+      "endurancePotential": "Endurance Potential",
+      "recoveryCapacity": "Recovery Capacity",
+      "optimizationStrategy": "Optimization Strategy",
+      "insight": "Professional Insight"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": {
+      "title": "Appearance Settings",
+      "subtitle": "Customize the look and feel of your site",
+      "primaryColor": "Primary Color",
+      "secondaryColor": "Secondary Color",
+      "fontFamily": "Font Family",
+      "enableDarkMode": "Enable Dark Mode by Default",
+      "note": "Changes to appearance settings will be applied after saving and refreshing the page."
+    },
+    "language": {
+      "title": "Language Settings",
+      "subtitle": "Choose your preferred language",
+      "english": "English",
+      "french": "French",
+      "arabic": "Arabic",
+      "note": "Changing language will reload the page."
+    },
+    "api": {
+      "title": "API Integrations",
+      "subtitle": "Configure external API connections",
+      "openai": "OpenAI (ChatGPT)",
+      "gemini": "Google Gemini",
+      "claude": "Anthropic Claude",
+      "apiKey": "API Key",
+      "model": "Model",
+      "temperature": "Temperature",
+      "maxTokens": "Max Tokens",
+      "enabled": "Enabled",
+      "defaultService": "Default AI Service",
+      "testConnection": "Test Connection",
+      "note": "API keys are stored securely and used only for generating recommendations and responses."
+    },
+    "content": {
+      "title": "Content Management",
+      "subtitle": "Edit content displayed on the site",
+      "pages": "Pages",
+      "sections": "Sections",
+      "editContent": "Edit Content",
+      "previewChanges": "Preview Changes",
+      "publishChanges": "Publish Changes"
+    },
+    "database": {
+      "title": "Database Settings",
+      "subtitle": "Configure database connection",
+      "host": "Host",
+      "username": "Username",
+      "password": "Password",
+      "database": "Database",
+      "port": "Port",
+      "connectionString": "Connection String",
+      "testConnection": "Test Connection"
+    }
+  },
+  "rtlTest": {
+    "title": "RTL Layout Test",
+    "section1": {
+      "title": "Text Direction Test",
+      "paragraph1": "This paragraph tests how text flows in different languages. The text should flow from left to right in English and French, but from right to left in Arabic.",
+      "paragraph2": "Icons and elements should also adjust their positions based on the text direction. For example, this list:",
+      "listItem1": "First item with icon on the left (or right in RTL)",
+      "listItem2": "Second item with proper alignment",
+      "listItem3": "Third item showing correct flow"
+    },
+    "section2": {
+      "title": "Layout Direction Test",
+      "item1": {
+        "title": "Left/Right Positioning",
+        "description": "This circle should be on the left in LTR and right in RTL"
+      },
+      "quote": "This is a blockquote with a left border in LTR, which should become a right border in RTL.",
+      "prevButton": "Previous",
+      "nextButton": "Next"
+    },
+    "formSection": {
+      "title": "Form Elements Test",
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter your name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "messageLabel": "Message",
+      "messagePlaceholder": "Enter your message",
+      "submitButton": "Submit"
+    }
+  }
+}

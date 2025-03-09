@@ -1,0 +1,125 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "share": "Partager",
+    "view": "Voir",
+    "download": "Télécharger",
+    "export": "Exporter",
+    "import": "Importer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "success": "Succès!",
+    "confirm": "Confirmer",
+    "apply": "Appliquer",
+    "reset": "Réinitialiser",
+    "back": "Retour",
+    "all": "Toutes les catégories",
+    "saved": "Enregistré"
+  },
+  "header": {
+    "home": "Accueil",
+    "about": "À propos",
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "S'inscrire",
+    "darkMode": "Mode sombre"
+  },
+  "recommendations": {
+    "title": "Recommandations de santé et de performance",
+    "subtitle": "Recommandations personnalisées basées sur votre composition corporelle, vos préférences sportives et vos objectifs de fitness",
+    "professionalAssessment": "Évaluation professionnelle",
+    "basedOnMetrics": "Basé sur vos mesures",
+    "performancePotential": "Potentiel de performance",
+    "tabs": {
+      "nutrition": "Nutrition",
+      "training": "Entraînement",
+      "recovery": "Récupération",
+      "mental": "Mental"
+    },
+    "viewAll": {
+      "nutrition": "Voir toutes les recommandations nutritionnelles",
+      "training": "Voir toutes les recommandations d'entraînement",
+      "recovery": "Voir toutes les recommandations de récupération",
+      "mental": "Voir toutes les recommandations mentales"
+    },
+    "saved": {
+      "title": "Recommandations enregistrées",
+      "exportAll": "Tout exporter",
+      "empty": "Vous n'avez pas encore enregistré de recommandations. Cliquez sur le bouton \"Enregistrer\" sur les recommandations que vous souhaitez consulter ultérieurement."
+    },
+    "help": {
+      "title": "Comment utiliser ces recommandations",
+      "description": "Ces recommandations personnalisées sont basées sur vos mesures actuelles et votre focus sportif. Enregistrez vos favoris, mettez-les en œuvre de manière cohérente et suivez vos progrès au fil du temps pour de meilleurs résultats.",
+      "viewTutorial": "Voir le tutoriel",
+      "contactCoach": "Contacter un coach"
+    },
+    "allRecommendations": {
+      "description": "Parcourez toutes les recommandations adaptées à votre profil et à vos préférences."
+    },
+    "noResults": "Aucune recommandation trouvée correspondant à vos critères."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "appearance": {
+      "title": "Paramètres d'apparence",
+      "subtitle": "Personnalisez l'apparence de votre site",
+      "primaryColor": "Couleur principale",
+      "secondaryColor": "Couleur secondaire",
+      "fontFamily": "Police de caractères",
+      "enableDarkMode": "Activer le mode sombre par défaut",
+      "note": "Les modifications des paramètres d'apparence seront appliquées après l'enregistrement et l'actualisation de la page."
+    },
+    "language": {
+      "title": "Paramètres de langue",
+      "subtitle": "Choisissez votre langue préférée",
+      "english": "Anglais",
+      "french": "Français",
+      "arabic": "Arabe",
+      "note": "Le changement de langue rechargera la page."
+    },
+    "api": {
+      "title": "Intégrations API",
+      "subtitle": "Configurez les connexions API externes",
+      "openai": "OpenAI (ChatGPT)",
+      "gemini": "Google Gemini",
+      "claude": "Anthropic Claude",
+      "apiKey": "Clé API",
+      "model": "Modèle",
+      "temperature": "Température",
+      "maxTokens": "Tokens maximum",
+      "enabled": "Activé",
+      "defaultService": "Service IA par défaut",
+      "testConnection": "Tester la connexion",
+      "note": "Les clés API sont stockées en toute sécurité et utilisées uniquement pour générer des recommandations et des réponses."
+    },
+    "content": {
+      "title": "Gestion du contenu",
+      "subtitle": "Modifiez le contenu affiché sur le site",
+      "pages": "Pages",
+      "sections": "Sections",
+      "editContent": "Modifier le contenu",
+      "previewChanges": "Aperçu des modifications",
+      "publishChanges": "Publier les modifications"
+    },
+    "database": {
+      "title": "Paramètres de base de données",
+      "subtitle": "Configurez la connexion à la base de données",
+      "host": "Hôte",
+      "username": "Nom d'utilisateur",
+      "password": "Mot de passe",
+      "database": "Base de données",
+      "port": "Port",
+      "connectionString": "Chaîne de connexion",
+      "testConnection": "Tester la connexion"
+    }
+  }
+}

@@ -1,217 +1,179 @@
 <?php
-// Include database connection file
-require_once 'db-connect.php';
-
-// Set common API response headers
-setApiHeaders();
-
 /**
- * Get SMTP configuration
- * GET /api/smtp-config.php
+ * SMTP Configuration API Endpoint
+ * 
+ * This endpoint handles saving and retrieving SMTP server configuration.
  */
+
+// Define secure access constant
+define('SECURE_ACCESS', true);
+
+// Set headers
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// Include database connection
+require_once __DIR__ . '/db-connect.php';
+
+// Handle GET request to retrieve SMTP configuration
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        // Get database connection
-        $pdo = getDbConnection();
+        // Query to get SMTP settings from the database
+        $query = "SELECT setting_key, setting_value FROM bmi_settings WHERE setting_group = 'smtp'";
+        $result = executeQuery($query);
         
-        // Get active SMTP configuration
-        $stmt = $pdo->prepare("SELECT * FROM smtp_config WHERE is_active = TRUE ORDER BY id DESC LIMIT 1");
-        $stmt->execute();
-        $config = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$config) {
-            // Return empty config if none exists
-            sendJsonResponse([
-                "success" => true,
-                "data" => null,
-                "message" => "No SMTP configuration found"
-            ]);
-            exit;
+        if ($result === false) {
+            throw new Exception('Failed to retrieve SMTP settings');
         }
         
-        // Format the config for response
-        $formattedConfig = [
-            'id' => $config['id'],
-            'host' => $config['host'],
-            'port' => (int) $config['port'],
-            'username' => $config['username'],
-            'password' => '********', // Don't send actual password to client
-            'fromEmail' => $config['from_email'],
-            'fromName' => $config['from_name'],
-            'encryption' => $config['encryption'],
-            'authMethod' => $config['auth_method'],
-            'isActive' => (bool) $config['is_active'],
-            'createdAt' => $config['created_at'],
-            'updatedAt' => $config['updated_at']
+        // Format the results into a configuration object
+        $smtpConfig = [
+            'host' => '',
+            'port' => 587,
+            'username' => '',
+            'password' => '',
+            'from_email' => '',
+            'from_name' => 'BMI Tracker',
+            'encryption' => 'tls',
+            'auth_method' => 'plain'
         ];
         
-        // Return success response with config
-        sendJsonResponse([
-            "success" => true,
-            "data" => $formattedConfig
+        foreach ($result as $row) {
+            $key = $row['setting_key'];
+            $value = $row['setting_value'];
+            
+            // Map database keys to config keys
+            switch ($key) {
+                case 'smtp_host':
+                    $smtpConfig['host'] = $value;
+                    break;
+                case 'smtp_port':
+                    $smtpConfig['port'] = (int)$value;
+                    break;
+                case 'smtp_username':
+                    $smtpConfig['username'] = $value;
+                    break;
+                case 'smtp_password':
+                    $smtpConfig['password'] = $value; // In a real app, this would be encrypted
+                    break;
+                case 'smtp_from_email':
+                    $smtpConfig['from_email'] = $value;
+                    break;
+                case 'smtp_from_name':
+                    $smtpConfig['from_name'] = $value;
+                    break;
+                case 'smtp_encryption':
+                    $smtpConfig['encryption'] = $value;
+                    break;
+                case 'smtp_auth_method':
+                    $smtpConfig['auth_method'] = $value;
+                    break;
+            }
+        }
+        
+        // Return the configuration
+        echo json_encode([
+            'success' => true,
+            'data' => $smtpConfig
         ]);
         
-    } catch (PDOException $e) {
-        sendJsonResponse(["success" => false, "message" => "Database error: " . $e->getMessage()], 500);
     } catch (Exception $e) {
-        sendJsonResponse(["success" => false, "message" => "Server error: " . $e->getMessage()], 500);
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to retrieve SMTP configuration: ' . $e->getMessage()
+        ]);
     }
 }
 
-/**
- * Save SMTP configuration
- * POST /api/smtp-config.php
- */
+// Handle POST request to save SMTP configuration
 else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get the posted data
-    $data = json_decode(file_get_contents("php://input"), true);
-    
-    // Check if data is valid
-    if (!$data || !isset($data['host']) || !isset($data['username']) || !isset($data['fromEmail'])) {
-        sendJsonResponse(["success" => false, "message" => "Invalid data format. Please provide host, username, and fromEmail."], 400);
-        exit;
-    }
-    
     try {
-        // Get database connection
-        $pdo = getDbConnection();
+        // Get JSON data from request body
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
         
-        // Begin transaction
-        $pdo->beginTransaction();
+        if (!$data) {
+            throw new Exception('Invalid JSON data');
+        }
         
-        // Deactivate all existing configurations
-        $stmt = $pdo->prepare("UPDATE smtp_config SET is_active = FALSE");
-        $stmt->execute();
+        // Validate required fields
+        $requiredFields = ['host', 'port', 'username', 'password', 'from_email', 'from_name', 'encryption', 'auth_method'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                throw new Exception("Missing required field: $field");
+            }
+        }
         
-        // Check if we're updating an existing config
-        $isUpdate = isset($data['id']) && !empty($data['id']);
+        // Start a transaction
+        $mysqli = beginTransaction();
         
-        if ($isUpdate) {
-            // Update existing config
-            $sql = "UPDATE smtp_config SET 
-                host = ?, 
-                port = ?, 
-                username = ?, 
-                from_email = ?, 
-                from_name = ?, 
-                encryption = ?, 
-                auth_method = ?, 
-                is_active = TRUE, 
-                updated_at = NOW()";
+        // Map of settings to save
+        $settings = [
+            'smtp_host' => $data['host'],
+            'smtp_port' => $data['port'],
+            'smtp_username' => $data['username'],
+            'smtp_password' => $data['password'], // In a real app, this would be encrypted
+            'smtp_from_email' => $data['from_email'],
+            'smtp_from_name' => $data['from_name'],
+            'smtp_encryption' => $data['encryption'],
+            'smtp_auth_method' => $data['auth_method']
+        ];
+        
+        // Save each setting using REPLACE INTO to handle both insert and update
+        foreach ($settings as $key => $value) {
+            $query = "REPLACE INTO bmi_settings (setting_key, setting_value, setting_group) VALUES (?, ?, 'smtp')";
+            $result = $mysqli->prepare($query);
             
-            $params = [
-                $data['host'],
-                $data['port'] ?? 587,
-                $data['username'],
-                $data['fromEmail'],
-                $data['fromName'] ?? 'BMI Tracker',
-                $data['encryption'] ?? 'tls',
-                $data['authMethod'] ?? 'plain'
-            ];
-            
-            // Only update password if provided
-            if (isset($data['password']) && !empty($data['password']) && $data['password'] !== '********') {
-                $sql .= ", password = ?";
-                $params[] = $data['password'];
+            if (!$result) {
+                throw new Exception('Failed to prepare statement: ' . $mysqli->error);
             }
             
-            $sql .= " WHERE id = ?";
-            $params[] = $data['id'];
+            $result->bind_param('ss', $key, $value);
             
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            if (!$result->execute()) {
+                throw new Exception('Failed to save setting: ' . $result->error);
+            }
             
-            $configId = $data['id'];
-            $message = "SMTP configuration updated successfully";
-        } else {
-            // Insert new config
-            $stmt = $pdo->prepare("INSERT INTO smtp_config (
-                host, 
-                port, 
-                username, 
-                password, 
-                from_email, 
-                from_name, 
-                encryption, 
-                auth_method, 
-                is_active, 
-                created_at, 
-                updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, NOW(), NOW())");
-            
-            $stmt->execute([
-                $data['host'],
-                $data['port'] ?? 587,
-                $data['username'],
-                $data['password'] ?? '',
-                $data['fromEmail'],
-                $data['fromName'] ?? 'BMI Tracker',
-                $data['encryption'] ?? 'tls',
-                $data['authMethod'] ?? 'plain'
-            ]);
-            
-            $configId = $pdo->lastInsertId();
-            $message = "SMTP configuration created successfully";
+            $result->close();
         }
         
-        // Commit transaction
-        $pdo->commit();
+        // Commit the transaction
+        commitTransaction($mysqli);
         
         // Return success response
-        sendJsonResponse([
-            "success" => true,
-            "message" => $message,
-            "data" => ["id" => $configId]
-        ]);
-        
-    } catch (PDOException $e) {
-        // Rollback transaction on error
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        sendJsonResponse(["success" => false, "message" => "Database error: " . $e->getMessage()], 500);
-    } catch (Exception $e) {
-        // Rollback transaction on error
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        sendJsonResponse(["success" => false, "message" => "Server error: " . $e->getMessage()], 500);
-    }
-}
-
-/**
- * Test SMTP configuration
- * POST /api/smtp-config.php?action=test
- */
-else if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'test') {
-    // Get the posted data
-    $data = json_decode(file_get_contents("php://input"), true);
-    
-    // Check if data is valid
-    if (!$data || !isset($data['testEmail'])) {
-        sendJsonResponse(["success" => false, "message" => "Invalid data format. Please provide testEmail."], 400);
-        exit;
-    }
-    
-    try {
-        // In a real application, you would use PHPMailer or similar library to send a test email
-        // For this demo, we'll simulate a successful email send
-        
-        // Simulate API delay
-        sleep(1);
-        
-        // Return success response
-        sendJsonResponse([
-            "success" => true,
-            "message" => "Test email sent successfully to " . $data['testEmail']
+        echo json_encode([
+            'success' => true,
+            'message' => 'SMTP configuration saved successfully'
         ]);
         
     } catch (Exception $e) {
-        sendJsonResponse(["success" => false, "message" => "Error sending test email: " . $e->getMessage()], 500);
+        // Rollback transaction if it was started
+        if (isset($mysqli)) {
+            rollbackTransaction($mysqli);
+        }
+        
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to save SMTP configuration: ' . $e->getMessage()
+        ]);
     }
 }
 
-// Method not allowed
+// Handle unsupported methods
 else {
-    sendJsonResponse(["success" => false, "message" => "Method not allowed"], 405);
+    http_response_code(405);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Method not allowed. Use GET or POST.'
+    ]);
 }

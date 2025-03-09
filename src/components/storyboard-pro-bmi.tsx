@@ -1,4 +1,4 @@
-import { ProBMICalculator } from "./ui/pro-bmi-calculator";
+import { ProfessionalBMICalculator } from "./ui/professional-bmi-calculator";
 
 export default function StoryboardProBMI() {
   return (
@@ -6,7 +6,7 @@ export default function StoryboardProBMI() {
       <h1 className="text-3xl font-bold mb-8 text-center">
         Professional BMI Calculator
       </h1>
-      <ProBMICalculator />
+      <ProfessionalBMICalculator />
     </div>
   );
 }

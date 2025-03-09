@@ -1,5 +1,5 @@
 import { BMICalculator } from "./ui/bmi-calculator";
-import { AdvancedBMICalculator } from "./ui/advanced-bmi-calculator";
+import { ProfessionalBMICalculator } from "./ui/professional-bmi-calculator";
 
 export default function StoryboardCompareCalculators() {
   return (
@@ -20,7 +20,7 @@ export default function StoryboardCompareCalculators() {
           <h2 className="text-xl font-semibold mb-4 text-center">
             Professional Calculator
           </h2>
-          <AdvancedBMICalculator />
+          <ProfessionalBMICalculator />
         </div>
       </div>
     </div>
